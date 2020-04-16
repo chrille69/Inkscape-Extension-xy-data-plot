@@ -15,3 +15,5 @@ into your extension-directory. You will find the directory under `Edit -> Settin
 - Create a rectangle and select it.
 - Choose the xy-data-plot-extension under `Extensions -> Render`.
 - Provide a well-formed CSV-file. You find an example in the repository.
+
+Happy inkscaping
