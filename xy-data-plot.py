@@ -70,7 +70,25 @@ def getMinMax( data, axis='x', round=True ):
     min = floor(min, decimals = 1 if max == 0 else int( math.log10(abs(max)) ) )
   return (min, max)
 
-  
+def intersectionParameter(s0,s1,smax):
+  return (smax-s0)/(s1-s0)
+
+def intersectionPoint(values,prevalues,xmin,xmax,ymin,ymax):
+  sxmin = intersectionParameter(prevalues['x'],values['x'],xmin)
+  sxmax = intersectionParameter(prevalues['x'],values['x'],xmax)
+  symin = intersectionParameter(prevalues['y'],values['y'],ymin)
+  symax = intersectionParameter(prevalues['y'],values['y'],ymax)
+  s = 1
+  if sxmin > 0 and sxmin < 1 and sxmin < s:
+    s = sxmin
+  if sxmax > 0 and sxmax < 1 and sxmax < s:
+    s = sxmax
+  if symin > 0 and symin < 1 and symin < s:
+    s = symin
+  if symax > 0 and symax < 1 and symax < s:
+    s = symax
+  return {'x': prevalues['x']+s*(values['x']-prevalues['x']), 'y': prevalues['y']+s*(values['y']-prevalues['y'])}
+
 class XY_Data_Plot(Effect):
   def __init__(self):
     Effect.__init__(self)
@@ -119,10 +137,27 @@ class XY_Data_Plot(Effect):
     
     pathstr = ""
     values = self.data[0]
-    pathstr   +=  'M{},{}'.format( self.transformx(values['x']), self.transformy(values['y']) )
     
+    nextmove = 'M'
+    if values['x'] >= self.xmin and values['x'] <= self.xmax and values['y'] >= self.ymin and values['y'] <= self.ymax:
+      pathstr += '{}{},{}'.format( nextmove, self.transformx(values['x']), self.transformy(values['y']) )
+      nextmove = 'L'
+    
+    prevalues=values
     for values in self.data[1:]:
-      pathstr += ' L{},{}'.format( self.transformx(values['x']), self.transformy(values['y']) )
+      if values['x'] >= self.xmin and values['x'] <= self.xmax and values['y'] >= self.ymin and values['y'] <= self.ymax:
+        if nextmove == 'M':
+          interpoint = intersectionPoint(values,prevalues,self.xmin,self.xmax,self.ymin,self.ymax)
+          pathstr += ' {}{},{}'.format( nextmove, self.transformx(interpoint['x']), self.transformy(interpoint['y']) )
+          nextmove = 'L'
+        pathstr += ' {}{},{}'.format( nextmove, self.transformx(values['x']), self.transformy(values['y']) )
+        nextmove = 'L'
+      else:
+        if nextmove == 'L':
+          interpoint = intersectionPoint(values,prevalues,self.xmin,self.xmax,self.ymin,self.ymax)
+          pathstr += ' {}{},{}'.format( nextmove, self.transformx(interpoint['x']), self.transformy(interpoint['y']) )
+        nextmove = 'M'
+      prevalues = values
       
     newpath = PathElement(d=pathstr)
     newpath.style = self.pathstyle
