@@ -71,6 +71,8 @@ def getMinMax( data, axis='x', round=True ):
   return (min, max)
 
 def intersectionParameter(s0,s1,smax):
+  if s1 == s0:
+    return math.inf
   return (smax-s0)/(s1-s0)
 
 def intersectionPoint(values,prevalues,xmin,xmax,ymin,ymax):
@@ -79,13 +81,13 @@ def intersectionPoint(values,prevalues,xmin,xmax,ymin,ymax):
   symin = intersectionParameter(prevalues['y'],values['y'],ymin)
   symax = intersectionParameter(prevalues['y'],values['y'],ymax)
   s = 1
-  if sxmin > 0 and sxmin < 1 and sxmin < s:
+  if sxmin >= 0 and sxmin < 1 and sxmin < s:
     s = sxmin
-  if sxmax > 0 and sxmax < 1 and sxmax < s:
+  if sxmax >= 0 and sxmax < 1 and sxmax < s:
     s = sxmax
-  if symin > 0 and symin < 1 and symin < s:
+  if symin >= 0 and symin < 1 and symin < s:
     s = symin
-  if symax > 0 and symax < 1 and symax < s:
+  if symax >= 0 and symax < 1 and symax < s:
     s = symax
   return {'x': prevalues['x']+s*(values['x']-prevalues['x']), 'y': prevalues['y']+s*(values['y']-prevalues['y'])}
 
@@ -139,13 +141,13 @@ class XY_Data_Plot(Effect):
     values = self.data[0]
     
     nextmove = 'M'
-    if values['x'] >= self.xmin and values['x'] <= self.xmax and values['y'] >= self.ymin and values['y'] <= self.ymax:
+    if values['x'] > self.xmin and values['x'] < self.xmax and values['y'] > self.ymin and values['y'] < self.ymax:
       pathstr += '{}{},{}'.format( nextmove, self.transformx(values['x']), self.transformy(values['y']) )
       nextmove = 'L'
     
     prevalues=values
     for values in self.data[1:]:
-      if values['x'] >= self.xmin and values['x'] <= self.xmax and values['y'] >= self.ymin and values['y'] <= self.ymax:
+      if values['x'] > self.xmin and values['x'] < self.xmax and values['y'] > self.ymin and values['y'] < self.ymax:
         if nextmove == 'M':
           interpoint = intersectionPoint(values,prevalues,self.xmin,self.xmax,self.ymin,self.ymax)
           pathstr += ' {}{},{}'.format( nextmove, self.transformx(interpoint['x']), self.transformy(interpoint['y']) )
