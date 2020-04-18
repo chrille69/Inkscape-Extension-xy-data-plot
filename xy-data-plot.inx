@@ -7,18 +7,19 @@
 
   <param name="tab" type="notebook">
     <page name="csv" _gui-text="CSV">
-      <param type="path"   name="csv_file" _gui-text="CSV-Datei" mode="file" filetypes="csv,txt"/>
-      <param type="string" name="csv_encoding" _gui-text="CSV Encoding">utf-8</param>
-      <param name="csv_delimiter" type="optiongroup" _gui-text="CSV Feldtrenner" appearance="minimal">
+      <param type="path"   name="csv_file" _gui-text="Datei" mode="file" filetypes="csv,txt"/>
+      <param type="string" name="csv_encoding" _gui-text="Encoding">utf-8</param>
+      <param name="csv_delimiter" type="optiongroup" _gui-text="Feldtrenner" appearance="minimal">
         <option value=";">;</option>
         <option value=",">,</option>
         <option value=":">:</option>
         <option value=" ">Space</option>
         <option value="\t">Tabulator</option>
       </param>
-      <param type="int"    name="csv_columnx"    _gui-text="CSV Spalte für x-Werte" min="0" max="100">0</param>
-      <param type="int"    name="csv_columny"    _gui-text="CSV Spalte für y-Werte" min="0" max="100">1</param>
-      <param type="int"   name="csv_ignorefirst" _gui-text="CSV Überspringe die ersten N Spalten">0</param>
+      <param type="int"  name="csv_columnx"    _gui-text="Spalte für x-Werte" min="0" max="100">0</param>
+      <param type="int"  name="csv_columny"    _gui-text="Spalte für y-Werte" min="0" max="100">1</param>
+      <param type="int"  name="csv_ignorefirst" _gui-text="Überspringe die ersten N Spalten">0</param>
+      <param type="bool" name="csv_storedata"  _gui-text="Speichere CSV-Datei in data-Attribut (g-Node)">false</param>
     </page>
     <page name="xaxis" _gui-text="x-Achse">
       <param type="string" name="xaxis_format"    _gui-text="Zahlenformat">2.2f</param>
@@ -40,9 +41,16 @@
       <param type="bool"   name="yaxis_ticksout"  _gui-text="Ticks nach aussen">false</param>
       <param type="bool"   name="yaxis_grid"      _gui-text="Gitterlinien">false</param>
     </page>
-    <page name="border" _gui-text="Rahmen">
-      <param type="bool" name="border_create_new" _gui-text="Erzeuge Rahmen">true</param>
-      <param type="bool" name="shape_remove_old"  _gui-text="Entferne Shape">false</param>
+    <page name="border" _gui-text="Border">
+      <param type="bool" name="border_create_left"   _gui-text="Rahmen links">true</param>
+      <param type="bool" name="border_create_bottom" _gui-text="Rahmen unten">true</param>
+      <param type="bool" name="border_create_right"  _gui-text="Rahmen rechts">true</param>
+      <param type="bool" name="border_create_top"    _gui-text="Rahmen oben">true</param>
+    </page>
+    <page name="border" _gui-text="Labels">
+      <param type="string" name="label_title" _gui-text="Titel"></param>
+      <param type="string" name="label_xaxis" _gui-text="x-Achse"></param>
+      <param type="string" name="label_yaxis" _gui-text="x-Achse"></param>
     </page>
     <page name="usage" _gui-text="Verwendung">
       <_label>
@@ -56,6 +64,15 @@
       <_label>Christian Hoffmann, Berlin 2020</_label>
     </page>
   </param>
+  <param type="float" name="stroke_width" _gui-text="Linienbreite" precision="1" min="0" max="100">1</param>
+  <param type="optiongroup" name="stroke_width_unit" _gui-text="Einheit"  appearance="minimal">
+    <option value="px">px</option>
+    <option value="pt">pt</option>
+    <option value="mm">mm</option>
+    <option value="cm">cm</option>
+    <option value="in">in</option>
+  </param>
+  <param type="bool" name="shape_remove_old"  _gui-text="Entferne ausgewähltes Objekt">false</param>
     
   <effect>
     <object-type>all</object-type>
