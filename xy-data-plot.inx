@@ -16,10 +16,10 @@
         <option value=" ">Space</option>
         <option value="\t">Tabulator</option>
       </param>
-      <param type="int"  name="csv_columnx"    _gui-text="Spalte für x-Werte" min="0" max="100">0</param>
-      <param type="int"  name="csv_columny"    _gui-text="Spalte für y-Werte" min="0" max="100">1</param>
-      <param type="int"  name="csv_ignorefirst" _gui-text="Überspringe die ersten N Spalten">0</param>
-      <param type="bool" name="csv_storedata"  _gui-text="Speichere CSV-Datei in data-Attribut (g-Node)">false</param>
+      <param type="int"    name="csv_columnx"     _gui-text="Spalte für x-Werte" min="0" max="100">0</param>
+      <param type="string" name="csv_columny"     _gui-text="Spalten für y-Werte (evtl. durch ,;:Space getrennt)">1</param>
+      <param type="int"    name="csv_ignorefirst" _gui-text="Überspringe die ersten N Spalten">0</param>
+      <param type="bool"   name="csv_storedata"   _gui-text="Speichere CSV-Datei in data-Attribut (g-Node)">false</param>
     </page>
     <page name="xaxis" _gui-text="x-Achse">
       <param type="string" name="xaxis_format"    _gui-text="Zahlenformat">2.2f</param>

@@ -24,11 +24,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from inkex import TextElement, Effect, Line, PathElement, Style, Vector2d
 from inkex import Group, Rectangle, Boolean as Bool, errormsg, AbortExtension
-import csv
 import math
+import re
 
-def getCSVData(csvfile,fileencoding,csvoptions,ignorefirst,xidx,yidx):
-  data = []
+def getCSVData(csvfile,fileencoding,csvoptions,ignorefirst,xidx,yidxarr):
+  import csv
+  data = XYValues(len(yidxarr))
   with open(csvfile, newline='', encoding=fileencoding ) as f:
     reader = csv.reader(f,**csvoptions)
     try:
@@ -36,7 +37,7 @@ def getCSVData(csvfile,fileencoding,csvoptions,ignorefirst,xidx,yidx):
         if reader.line_num <= ignorefirst:
             continue
         try:
-          data.append( { 'x': float(row[xidx]), 'y': float(row[yidx]) } )
+          data.append( float(row[xidx]), [ float(row[yidx]) for yidx in yidxarr ] )
         except ValueError as e:
           errormsg(_("Float error: line {}: {}".format(reader.line_num, row)))
         except IndexError:
@@ -57,18 +58,6 @@ def floor( n, decimals = None ):
     decimals = 1 if n == 0 else int( math.log10(abs(n)) )
   multiplier = 10 ** decimals
   return math.floor(n / multiplier) * multiplier
-
-def getMinMax( data, axis='x', round=True ):
-  values = data[0]
-  min = values[axis]
-  max = values[axis]
-  for values in data[1:]:
-    if values[axis] < min: min = values[axis]
-    if values[axis] > max: max = values[axis]
-  if round:
-    max = ceil(max)
-    min = floor(min, decimals = 1 if max == 0 else int( math.log10(abs(max)) ) )
-  return (min, max)
 
 def textAt( x, y, text, style, rotate=0 ):
   "Places a test-element at global-coordinates."
@@ -100,7 +89,48 @@ def intersectionPoint(values,prevalues,xmin,xmax,ymin,ymax):
   if symax >= 0 and symax < 1 and symax < s:
     s = symax
   return {'x': prevalues['x']+s*(values['x']-prevalues['x']), 'y': prevalues['y']+s*(values['y']-prevalues['y'])}
+
+class XYValues:
+  def __init__(self, numberOfYColumns=1 ):
+    self.nYCols = numberOfYColumns
+    self.data = []
+    self.xmin = None
+    self.xmax = None
+    self.ymin = [None for i in range(numberOfYColumns)]
+    self.ymax = [None for i in range(numberOfYColumns)]
   
+  def __iter__(self):
+    return iter(self.data)
+  
+  def append(self, x, yarr):
+    self.data.append({'x':x,'y':yarr})
+  
+  def len(self):
+    return len(self.data)
+  
+  def sort(self):
+    self.data.sort(key=lambda tup: tup['x'])
+  
+  def getXMinMax(self):
+    return self.xmin,self.xmax
+  
+  def getYMinMax(self):
+    return min(self.ymin),max(self.ymax)
+  
+  def calculateMinMax(self):
+    (self.xmin,self.xmax) = self._calculateMinMaxFromArray([val['x'] for val in self.data])
+    for i in range(self.nYCols):
+      (self.ymin[i],self.ymax[i]) = self._calculateMinMaxFromArray([val['y'][i] for val in self.data])
+  
+  def _calculateMinMaxFromArray(self,array,round=True):
+    vmin = min(array)
+    vmax = max(array)
+    
+    if round:
+      vmax = ceil(vmax)
+      vmin = floor(vmin, decimals = 1 if vmax == 0 else int( math.log10(abs(vmax)) ) )
+    return (vmin, vmax)
+
 class Axis:
   def __init__(self, von: Vector2d, bis: Vector2d, min: float, max: float ):
     "We need two svg-points and the min- and max-value of the axis."
@@ -186,7 +216,7 @@ class XY_Data_Plot(Effect):
     self.arg_parser.add_argument("--csv_encoding",    dest="csv_encoding",  action="store", type=str,  default="utf-8")
     self.arg_parser.add_argument("--csv_delimiter",   dest="csv_delimiter", action="store", type=str,  default=";")
     self.arg_parser.add_argument("--csv_columnx",     dest="xidx",          action="store", type=int,  default=0)
-    self.arg_parser.add_argument("--csv_columny",     dest="yidx",          action="store", type=int,  default=1)
+    self.arg_parser.add_argument("--csv_columny",     dest="yidxs",         action="store", type=str,  default="1")
     self.arg_parser.add_argument("--csv_ignorefirst", dest="ignorefirst",   action="store", type=int,  default=0)
     self.arg_parser.add_argument("--csv_storedata",   dest="storedata",     action="store", type=Bool, default="false")
     
@@ -231,11 +261,13 @@ class XY_Data_Plot(Effect):
     
     return (self.ymax-y)*self.bb.height/(self.ymax-self.ymin)+self.bb.top
   
-  def plotPath( self, style ):
+  def plotPath( self, style, yidx=0 ):
     "Generates path-command-string and returns a path-element."
     
     pathstr = ""
-    values = self.data[0]
+    dataiter = iter(self.data)
+    vals = next(dataiter)
+    values = {'x':vals['x'],'y':vals['y'][yidx]}
     
     nextmove = 'M'
     if values['x'] > self.xmin and values['x'] < self.xmax and values['y'] > self.ymin and values['y'] < self.ymax:
@@ -243,7 +275,12 @@ class XY_Data_Plot(Effect):
       nextmove = 'L'
     
     prevalues=values
-    for values in self.data[1:]:
+    while True:
+      try:
+        vals = next(dataiter)
+        values = {'x':vals['x'],'y':vals['y'][yidx]}
+      except StopIteration:
+        break
       if values['x'] > self.xmin and values['x'] < self.xmax and values['y'] > self.ymin and values['y'] < self.ymax:
         if nextmove == 'M':
           interpoint = intersectionPoint(values,prevalues,self.xmin,self.xmax,self.ymin,self.ymax)
@@ -340,29 +377,33 @@ class XY_Data_Plot(Effect):
     if len(self.svg.selected) != 1:
       raise AbortExtension(_("Please select exact one object, a rectangle is preferred."))
 
+    yidxarray = [int(x) for x in re.split(r'[,;: ]',self.options.yidxs) ]
+    
     # get CSV data
     self.data = getCSVData(self.options.csv_file,
                            self.options.csv_encoding,
                            { 'delimiter': self.options.csv_delimiter.replace('\\t', '\t') },
                            self.options.ignorefirst,
-                           self.options.xidx, self.options.yidx)
+                           self.options.xidx, yidxarray)
     
-    if len(self.data) < 2:
+    if self.data.len() < 2:
       raise AbortExtension(_("Less than 2 pairs of values. Nothing to plot."))
     
     # sort for x-values for a proper line
-    self.data.sort(key=lambda tup: tup['x'])
+    self.data.sort()
+    
+    self.data.calculateMinMax()
 
     # Search minima and maxima for x- and y-values
     if not self.options.xmin or not self.options.xmax:
-      (xmin, xmax) = getMinMax(self.data, 'x')
+      (xmin, xmax) = self.data.getXMinMax()
     self.xmin = self.options.xmin if self.options.xmin else xmin
     self.xmax = self.options.xmax if self.options.xmax else xmax
     if self.xmin >= self.xmax:
       raise AbortExtension(_('xmin > xmax'))
     
     if not self.options.ymin or not self.options.ymax:
-      (ymin, ymax) = getMinMax(self.data, 'y')
+      (ymin, ymax) = self.data.getYMinMax()
     self.ymin = self.options.ymin if self.options.ymin else ymin
     self.ymax = self.options.ymax if self.options.ymax else ymax
     if self.ymin >= self.ymax:
@@ -378,7 +419,10 @@ class XY_Data_Plot(Effect):
     # get axis and path
     xAchse = Axis(Vector2d(self.bb.left,self.bb.bottom),Vector2d(self.bb.right,self.bb.bottom),self.xmin,self.xmax)
     yAchse = Axis(Vector2d(self.bb.left,self.bb.bottom),Vector2d(self.bb.left ,self.bb.top)   ,self.ymin,self.ymax)
-    plot = self.plotPath(pathstyle)
+    
+    plot = []
+    for i in range(len(yidxarray)):
+      plot.append( self.plotPath(pathstyle,i) )
 
     # evaluate options and add all together
     if self.options.xgrid:
@@ -400,7 +444,8 @@ class XY_Data_Plot(Effect):
       group.add(yAchse.getSubTicks(self.options.ytickn, self.options.ysubtickn, .5*tlvon, .5*tlbis, subtickstyle))
       group.add(yAchse.getNumbers( self.options.ytickn, self.options.yformat, -2*self.ticksize, -.3*self.fontsize, textrechtsbdg))
     
-    group.add(plot)
+    for i in range(len(yidxarray)):
+      group.add(plot[i])
 
     if self.options.border_left:
       group.add( self.createBorderLine('left', borderstyle) )
