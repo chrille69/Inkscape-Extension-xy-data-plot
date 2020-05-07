@@ -389,7 +389,10 @@ class XY_Data_Plot(Effect):
     if len(self.svg.selected) != 1:
       raise AbortExtension(_("Please select exact one object, a rectangle is preferred."))
 
-    yidxarray = [int(x) for x in re.split(r'[,;: ]',self.options.yidxs) ]
+    try:
+      yidxarray = [ int(x) for x in re.split(r'[^0-9]',self.options.yidxs) if x ]
+    except ValueError as e:
+      raise AbortExtension(_("Split produces a string, that is not convertable to int."))
     
     # get CSV data
     self.data = getCSVData(self.options.csv_file,

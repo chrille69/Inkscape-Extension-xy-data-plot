@@ -17,8 +17,8 @@
         <option value="\t">Tabulator</option>
       </param>
       <param type="int"    name="csv_columnx"     _gui-text="Column for x-values" min="0" max="100">0</param>
-      <param type="string" name="csv_columny"     _gui-text="Column(s) for y-values (seperated by ,;: or Space)">1</param>
-      <param type="int"    name="csv_ignorefirst" _gui-text="Ignore the first N rows">0</param>
+      <param type="string" name="csv_columny"     _gui-text="Column(s) for y-values (seperated by non-digits)">1;2</param>
+      <param type="int"    name="csv_ignorefirst" _gui-text="Ignore the first N rows">1</param>
       <param type="bool"   name="csv_storedata"   _gui-text="Save CSV data in data-attribut (g-node)">false</param>
     </page>
     <page name="xaxis" _gui-text="x-axis">
