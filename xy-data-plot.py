@@ -111,11 +111,17 @@ class XYValues:
   def sort(self):
     self.data.sort(key=lambda tup: tup['x'])
   
-  def getXMinMax(self):
-    return self.xmin,self.xmax
+  def getXMin(self):
+    return self.xmin
   
-  def getYMinMax(self):
-    return min(self.ymin),max(self.ymax)
+  def getXMax(self):
+    return self.xmax
+  
+  def getYMin(self):
+    return min(self.ymin)
+  
+  def getYMax(self):
+    return max(self.ymax)
   
   def calculateMinMax(self):
     (self.xmin,self.xmax) = self._calculateMinMaxFromArray([val['x'] for val in self.data])
@@ -222,7 +228,9 @@ class XY_Data_Plot(Effect):
     
     self.arg_parser.add_argument("--xaxis_format"   ,  dest="xformat"   , action="store", type=str,   default="")
     self.arg_parser.add_argument("--xaxis_min"      ,  dest="xmin"      , action="store", type=float, default=0)
-    self.arg_parser.add_argument("--xaxis_max"      ,  dest="xmax"      , action="store", type=float, default=0)
+    self.arg_parser.add_argument("--xaxis_max"      ,  dest="xmax"      , action="store", type=float, default=100)
+    self.arg_parser.add_argument("--xaxis_min_autodetect",  dest="xmin_autodetect" , action="store", type=Bool, default="true")
+    self.arg_parser.add_argument("--xaxis_max_autodetect",  dest="xmax_autodetect" , action="store", type=Bool, default="true")
     self.arg_parser.add_argument("--xaxis_tick_n"   ,  dest="xtickn"    , action="store", type=int,   default=10)
     self.arg_parser.add_argument("--xaxis_subtick_n",  dest="xsubtickn" , action="store", type=int,   default=0)
     self.arg_parser.add_argument("--xaxis_ticksin"  ,  dest="xticksin"  , action="store", type=Bool, default="true")
@@ -231,7 +239,9 @@ class XY_Data_Plot(Effect):
     
     self.arg_parser.add_argument("--yaxis_format"   ,  dest="yformat"   , action="store", type=str,   default="")
     self.arg_parser.add_argument("--yaxis_min"      ,  dest="ymin"      , action="store", type=float, default=0)
-    self.arg_parser.add_argument("--yaxis_max"      ,  dest="ymax"      , action="store", type=float, default=0)
+    self.arg_parser.add_argument("--yaxis_max"      ,  dest="ymax"      , action="store", type=float, default=100)
+    self.arg_parser.add_argument("--yaxis_min_autodetect",  dest="ymin_autodetect" , action="store", type=Bool, default="true")
+    self.arg_parser.add_argument("--yaxis_max_autodetect",  dest="ymax_autodetect" , action="store", type=Bool, default="true")
     self.arg_parser.add_argument("--yaxis_tick_n"   ,  dest="ytickn"    , action="store", type=int,   default=10)
     self.arg_parser.add_argument("--yaxis_subtick_n",  dest="ysubtickn" , action="store", type=int,   default=0)
     self.arg_parser.add_argument("--yaxis_ticksin"  ,  dest="yticksin"  , action="store", type=Bool, default="true")
@@ -246,6 +256,7 @@ class XY_Data_Plot(Effect):
     self.arg_parser.add_argument("--label_title", dest="label_title", type=str, action="store", default="")
     self.arg_parser.add_argument("--label_xaxis", dest="label_xaxis", type=str, action="store", default="")
     self.arg_parser.add_argument("--label_yaxis", dest="label_yaxis", type=str, action="store", default="")
+    self.arg_parser.add_argument("--font_family", dest="font_family", type=str, action="store", default="sans")
     
     self.arg_parser.add_argument("--stroke_width"     , dest="stroke_width"     , type=float, action="store", default="1")
     self.arg_parser.add_argument("--stroke_width_unit", dest="stroke_width_unit", type=str  , action="store", default="px")
@@ -358,6 +369,7 @@ class XY_Data_Plot(Effect):
 
     textstyle = {
       'font-size': self.fontsize,
+      'font-family':self.options.font_family,
       'fill-opacity': '1.0',
       'stroke': 'none',
       'text-align': 'end',
@@ -389,23 +401,19 @@ class XY_Data_Plot(Effect):
     if self.data.len() < 2:
       raise AbortExtension(_("Less than 2 pairs of values. Nothing to plot."))
     
-    # sort for x-values for a proper line
+    # sort by x-values for a proper line
     self.data.sort()
     
     self.data.calculateMinMax()
 
-    # Search minima and maxima for x- and y-values
-    if not self.options.xmin or not self.options.xmax:
-      (xmin, xmax) = self.data.getXMinMax()
-    self.xmin = self.options.xmin if self.options.xmin else xmin
-    self.xmax = self.options.xmax if self.options.xmax else xmax
+    # Get minima and maxima for x- and y-values
+    self.xmin = self.data.getXMin() if self.options.xmin_autodetect else self.options.xmin
+    self.xmax = self.data.getXMax() if self.options.xmax_autodetect else self.options.xmax
     if self.xmin >= self.xmax:
       raise AbortExtension(_('xmin > xmax'))
     
-    if not self.options.ymin or not self.options.ymax:
-      (ymin, ymax) = self.data.getYMinMax()
-    self.ymin = self.options.ymin if self.options.ymin else ymin
-    self.ymax = self.options.ymax if self.options.ymax else ymax
+    self.ymin = self.data.getYMin() if self.options.ymin_autodetect else self.options.ymin
+    self.ymax = self.data.getYMax() if self.options.ymax_autodetect else self.options.ymax
     if self.ymin >= self.ymax:
       raise AbortExtension(_('ymin > ymax'))
     
