@@ -3,8 +3,8 @@
 Copyright (C) 2020 Christian Hoffmann christian@lehrer-hoffmann.de
 
 ##This extension allows you to draw a Cartesian grid in Inkscape.
-##There is a wide range of options including subdivision, subsubdivions
-## and logarithmic scales. Custom line widths are also possible.
+##There is a wide range of options including subdivision and
+## subsubdivions. Custom line widths are also possible.
 ##All elements are grouped with similar elements (eg all x-subdivs)
 
 This program is free software; you can redistribute it and/or modify
