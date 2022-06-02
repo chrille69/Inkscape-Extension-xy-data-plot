@@ -4,7 +4,7 @@ This repository contains an inkscape-extensions for plotting xy-data.
 
 ## Requirements
 
-- Inkscape 1.0
+- Inkscape 1.2
 - Python 3.8
 
 ## Installation
