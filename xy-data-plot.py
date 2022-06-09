@@ -210,7 +210,7 @@ class Axis:
     for i in range(ticks+1):
       val = self.min + i * step
       point = self.transform(val)
-      group.add( textAt( point.x-intan*self.sin+inrad*self.cos, point.y+intan*self.cos+inrad*self.sin, ("{0:"+fmtstr+"}").format(val), style) )
+      group.add( textAt( point.x-intan*self.sin+inrad*self.cos, point.y+intan*self.cos+inrad*self.sin, "{0:{1}}".format(val,fmtstr), style) )
     return group
   
 class XY_Data_Plot(Effect):
